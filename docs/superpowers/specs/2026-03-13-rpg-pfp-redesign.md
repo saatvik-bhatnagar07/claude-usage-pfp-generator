@@ -77,11 +77,11 @@ Based on a weighted activity score:
 
 ```
 score = (claudeMessages * 1.0)
-      + (gitCommits * 5.0)
-      + (gitLinesChanged * 0.05)
-      + (prsOpened * 10.0)
-      + (prsMerged * 10.0)
-      + (reviewsDone * 8.0)
+      + (gitCommits * 2.0)
+      + (gitLinesChanged * 0.01)
+      + (prsOpened * 2.0)
+      + (prsMerged * 2.0)
+      + (reviewsDone * 1.5)
       + (terminalCommands * 0.3)
       + (ideMinutes * 0.5)
 ```

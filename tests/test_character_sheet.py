@@ -26,9 +26,9 @@ def test_score_empty_dict():
 
 
 def test_score_known_calculation():
-    """10 claude msgs + 2 commits + 100 lines = 10 + 10 + 5 = 25.0."""
+    """10 claude msgs + 2 commits + 100 lines = 10 + 4 + 1 = 15.0."""
     stats = {"claudeMessages": 10, "gitCommits": 2, "gitLinesChanged": 100}
-    assert compute_score(stats) == 25.0
+    assert compute_score(stats) == 15.0
 
 
 def test_score_all_fields():
@@ -43,7 +43,7 @@ def test_score_all_fields():
         "terminalCommands": 1,
         "ideMinutes": 1,
     }
-    expected = 1.0 + 5.0 + 0.05 + 10.0 + 10.0 + 8.0 + 0.3 + 0.5
+    expected = 1.0 + 2.0 + 0.01 + 2.0 + 2.0 + 1.5 + 0.3 + 0.5
     assert abs(compute_score(stats) - expected) < 1e-9
 
 
@@ -137,8 +137,8 @@ def test_class_warrior_balanced():
     # Each category contributes ~20% of total
     stats = {
         "claudeMessages": 20,   # 20.0
-        "gitCommits": 4,        # 20.0
-        "prsOpened": 2,         # 20.0
+        "gitCommits": 10,       # 20.0
+        "prsOpened": 10,        # 20.0
         "terminalCommands": 67, # 20.1
         "ideMinutes": 40,       # 20.0
     }
@@ -168,16 +168,15 @@ def test_build_character_sheet_values():
 
 def test_build_character_sheet_rounding():
     """activityScore is rounded to 1 decimal place."""
-    stats = {"gitLinesChanged": 3}  # 3 * 0.05 = 0.15
+    stats = {"gitLinesChanged": 3}  # 3 * 0.01 = 0.03
     sheet = build_character_sheet(stats)
-    assert sheet["activityScore"] == 0.1 or sheet["activityScore"] == 0.2
-    # Python rounds 0.15 -> 0.1 (banker's rounding), but either is fine
+    assert sheet["activityScore"] == 0.0
     assert isinstance(sheet["activityScore"], float)
 
 
 def test_build_character_sheet_legendary():
     """High stats produce Legendary tier."""
-    stats = {"prsOpened": 13}  # 130
+    stats = {"prsOpened": 65}  # 65 * 2.0 = 130
     sheet = build_character_sheet(stats)
     assert sheet["tier"] == "Legendary"
     assert sheet["activityScore"] == 130.0
