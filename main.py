@@ -32,9 +32,16 @@ from image_generator import generate_image
 from slack_uploader import upload_profile_photo
 
 
+def _escape_applescript(s: str) -> str:
+    """Escape a string for safe embedding in AppleScript double-quoted literals."""
+    return s.replace("\\", "\\\\").replace('"', '\\"')
+
+
 def _notify(title: str, message: str, image_path: str | None = None) -> None:
     """Send a macOS notification and optionally open the image in Preview."""
-    script = f'display notification "{message}" with title "{title}"'
+    safe_title = _escape_applescript(title)
+    safe_message = _escape_applescript(message)
+    script = f'display notification "{safe_message}" with title "{safe_title}"'
     subprocess.run(["osascript", "-e", script], capture_output=True)
 
     if image_path:
