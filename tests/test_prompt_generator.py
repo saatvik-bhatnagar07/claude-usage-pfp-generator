@@ -40,7 +40,7 @@ def test_fallback_prompt_contains_class_and_tier():
     }
     result = _fallback_prompt(sheet)
     assert "pixel art" in result
-    assert "Blacksmith" in result.lower() or "forge" in result.lower()
+    assert "Blacksmith" in result
     assert len(result.split()) <= 60
 
 
