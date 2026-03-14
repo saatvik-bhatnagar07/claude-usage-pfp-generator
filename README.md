@@ -1,13 +1,14 @@
 # Claude Usage PFP Generator
 
-Generates a unique pixel art profile picture every day from your Claude Code CLI usage stats using SDXL Turbo (runs locally, no API key needed), then uploads it as your Slack profile photo.
+Generates a unique retro game character profile picture every day from your developer activity stats using SDXL Turbo (runs locally, no API key needed), then uploads it as your Slack profile photo. Your daily coding activity is mapped to an RPG character class and power tier, producing a different pixel art avatar based on what you actually did that day.
 
 ## How It Works
 
-1. **Read stats** — Parses `~/.claude/history.jsonl` to count today's messages and sessions.
-2. **Encode** — Serializes the stats into a canonical string and hashes it with SHA-256. The hash feeds a logistic map (r=3.99, fully chaotic regime) that expands it into a sequence of floats. Thanks to the avalanche effect, changing even a single message flips ~50% of the hash bits, which the chaotic map amplifies into a completely different float sequence.
-3. **Generate** — Each float indexes into curated descriptor pools (style, form, palette, effect, composition) to build a prompt. SDXL Turbo generates a 512x512 image in 4 steps, resized to 1024x1024 for Slack.
-4. **Upload** — Sets the generated image as your Slack profile photo via the `users.setPhoto` API.
+1. **Collect stats** — Aggregates daily activity from multiple sources: Claude Code messages, git commits, GitHub PRs/reviews, terminal commands, and JetBrains IDE usage.
+2. **Build character sheet** — Computes a weighted activity score to assign a power tier (Apprentice → Legendary) and an RPG class based on your dominant activity (e.g. heavy Claude usage → Mage, lots of commits → Blacksmith, many PRs → Paladin).
+3. **Generate prompt** — Uses Gemini 2.5 Flash to craft an evocative pixel art prompt from the character sheet, with a template-based fallback if no API key is set.
+4. **Generate image** — SDXL Turbo generates a 512x512 image in 4 steps, resized to 1024x1024 for Slack.
+5. **Upload** — Sets the generated image as your Slack profile photo via the `users.setPhoto` API.
 
 ## Setup
 
@@ -38,7 +39,7 @@ pip install -r requirements.txt
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and set `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET`.
+   Edit `.env` and set `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET`. Optionally set `GEMINI_API_KEY` for AI-generated prompts (falls back to templates if unset).
 7. Run the OAuth flow to get your user token:
    ```bash
    python main.py --setup
@@ -123,12 +124,15 @@ tail -f output/launchd.log
 
 ```
 main.py              — Entry point; orchestrates the full pipeline
+stats_collector.py   — Unified stats aggregation (Claude, git, GitHub, terminal, IDE)
 stats_reader.py      — Reads Claude usage stats from ~/.claude/history.jsonl
-encoder.py           — SHA-256 + logistic map chaotic encoding pipeline
-pools.py             — Curated descriptor pools (styles, palettes, effects, etc.)
+character_sheet.py   — Maps activity stats to RPG class and power tier
+prompt_generator.py  — Builds image prompts (Gemini 2.5 Flash or template fallback)
 image_generator.py   — SDXL Turbo image generation via HuggingFace diffusers
+slack_auth.py        — OAuth flow for obtaining Slack user token
 slack_uploader.py    — Uploads image as Slack profile photo
 requirements.txt     — Python dependencies
 .env.example         — Template for environment variables
 output/              — Generated images and launchd logs
+tests/               — Test suite
 ```
