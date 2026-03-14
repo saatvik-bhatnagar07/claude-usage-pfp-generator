@@ -34,7 +34,9 @@ from slack_uploader import upload_profile_photo
 
 def _notify(title: str, message: str, image_path: str | None = None) -> None:
     """Send a macOS notification and optionally open the image in Preview."""
-    script = f'display notification "{message}" with title "{title}"'
+    safe_title = title.replace('\\', '\\\\').replace('"', '\\"')
+    safe_message = message.replace('\\', '\\\\').replace('"', '\\"')
+    script = f'display notification "{safe_message}" with title "{safe_title}"'
     subprocess.run(["osascript", "-e", script], capture_output=True)
 
     if image_path:
