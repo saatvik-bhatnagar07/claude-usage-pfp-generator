@@ -26,6 +26,26 @@ def test_build_gemini_prompt_contains_class_and_tier():
     assert "95" in result
 
 
+def test_build_gemini_prompt_ignores_date_key():
+    """Gemini prompt excludes non-numeric keys like 'date' from top stats."""
+    sheet = {
+        "className": "Mage",
+        "tier": "Champion",
+        "activityScore": 95,
+        "stats": {
+            "date": "2026-03-14",
+            "claudeMessages": 80,
+            "gitCommits": 5,
+            "ideMinutes": 30,
+            "terminalCommands": 2,
+        },
+    }
+    result = _build_gemini_prompt(sheet)
+    assert "date" not in result
+    assert "2026-03-14" not in result
+    assert "claudeMessages=80" in result
+
+
 # ---------------------------------------------------------------------------
 # _fallback_prompt
 # ---------------------------------------------------------------------------
