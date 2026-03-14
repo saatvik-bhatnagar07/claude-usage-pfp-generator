@@ -105,9 +105,10 @@ def _build_gemini_prompt(sheet: dict) -> str:
     tier = sheet["tier"]
     score = sheet["activityScore"]
 
-    # Top 3 stats by value
+    # Top 3 stats by value (exclude non-numeric keys like "date")
     stats = sheet.get("stats", {})
-    sorted_stats = sorted(stats.items(), key=lambda x: x[1], reverse=True)[:3]
+    numeric_stats = {k: v for k, v in stats.items() if isinstance(v, (int, float))}
+    sorted_stats = sorted(numeric_stats.items(), key=lambda x: x[1], reverse=True)[:3]
     top_stats = ", ".join(f"{k}={v}" for k, v in sorted_stats)
 
     return (
