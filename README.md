@@ -39,7 +39,7 @@ pip install -r requirements.txt
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and set `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET`. Optionally set `GEMINI_API_KEY` for AI-generated prompts (falls back to templates if unset).
+   Edit `.env` and set `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET`.
 7. Run the OAuth flow to get your user token:
    ```bash
    python main.py --setup

@@ -1,26 +1,6 @@
-"""Generates image prompts from RPG character sheets.
-
-Primary: Gemini 2.5 Flash generates an evocative pixel art scene prompt.
-Fallback: Template-based prompt using class aesthetics if Gemini is unavailable.
-"""
+"""Generates image prompts from RPG character sheets using template-based aesthetics."""
 
 import random
-
-from google import genai
-from google.genai import types
-
-SYSTEM_PROMPT = (
-    "You are a pixel art scene designer for retro RPG profile pictures.\n\n"
-    "Given a developer's daily \"character sheet\" (RPG class, power tier, and activity stats), "
-    "write a single image generation prompt for a retro 16-bit pixel art portrait.\n\n"
-    "Rules:\n"
-    "- Maximum 60 words (CLIP token limit)\n"
-    "- Must be retro 16-bit pixel art style with dark background and visible pixels\n"
-    "- Ground the visual in the RPG class aesthetic\n"
-    "- Reflect the power tier in visual intensity and complexity\n"
-    "- No text or UI elements in the image\n"
-    "- Output ONLY the prompt, nothing else"
-)
 
 CLASS_AESTHETICS = {
     "Mage": [
@@ -99,28 +79,8 @@ TIER_INTENSITY = {
 }
 
 
-def _build_gemini_prompt(sheet: dict) -> str:
-    """Build the user prompt string for Gemini from the character sheet."""
-    class_name = sheet["className"]
-    tier = sheet["tier"]
-    score = sheet["activityScore"]
-
-    # Top 3 stats by value (exclude non-numeric keys like "date")
-    stats = sheet.get("stats", {})
-    numeric_stats = {k: v for k, v in stats.items() if isinstance(v, (int, float))}
-    sorted_stats = sorted(numeric_stats.items(), key=lambda x: x[1], reverse=True)[:3]
-    top_stats = ", ".join(f"{k}={v}" for k, v in sorted_stats)
-
-    return (
-        f"Class: {class_name}\n"
-        f"Tier: {tier}\n"
-        f"Activity score: {score}/200\n"
-        f"Top stats: {top_stats}"
-    )
-
-
-def _fallback_prompt(sheet: dict) -> str:
-    """Template-based RPG prompt using CLASS_AESTHETICS and TIER_INTENSITY."""
+def generate_prompt(sheet: dict) -> str:
+    """Generate a template-based image prompt from a character sheet."""
     class_name = sheet["className"]
     tier = sheet["tier"]
     aesthetic = random.choice(CLASS_AESTHETICS.get(class_name, CLASS_AESTHETICS["Warrior"]))
@@ -130,30 +90,3 @@ def _fallback_prompt(sheet: dict) -> str:
         f"retro 16-bit pixel art, {intensity} RPG {class_name} character, "
         f"{aesthetic}, dark background, large visible pixels, retro gaming aesthetic"
     )
-
-
-def generate_prompt(sheet: dict, api_key: str | None = None) -> str:
-    """Generate an image prompt from a character sheet.
-
-    Uses Gemini 2.5 Flash if an api_key is provided, otherwise falls back
-    to a template-based prompt.
-    """
-    if not api_key:
-        return _fallback_prompt(sheet)
-
-    try:
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=_build_gemini_prompt(sheet),
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=150,
-                temperature=0.9,
-            ),
-        )
-        if not response.text:
-            return _fallback_prompt(sheet)
-        return response.text
-    except Exception:
-        return _fallback_prompt(sheet)

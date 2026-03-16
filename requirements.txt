@@ -5,4 +5,3 @@ torch
 requests
 python-dotenv
 Pillow
-google-genai

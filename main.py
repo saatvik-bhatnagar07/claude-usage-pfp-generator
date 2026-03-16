@@ -72,7 +72,6 @@ def main():
 
     # Check required env vars
     slack_token = os.environ.get("SLACK_USER_TOKEN")
-    gemini_key = os.environ.get("GEMINI_API_KEY")
 
     if not slack_token and not args.dry_run:
         print("Error: SLACK_USER_TOKEN not set (use --dry-run to skip upload)", file=sys.stderr)
@@ -97,9 +96,7 @@ def main():
 
     # 3. Generate prompt
     print("\nGenerating image prompt...")
-    if not gemini_key:
-        print("  (No GEMINI_API_KEY — using template fallback)")
-    prompt = generate_prompt(sheet, api_key=gemini_key)
+    prompt = generate_prompt(sheet)
     print(f"  Prompt: {prompt}")
 
     # 4. Generate image
