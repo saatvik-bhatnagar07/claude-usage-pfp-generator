@@ -188,6 +188,16 @@ def test_secondary_class_only_from_nonzero_categories():
         assert result in valid
 
 
+def test_secondary_class_warrior_primary_all_categories_eligible():
+    """When primary is Warrior, all non-zero categories are eligible as secondary."""
+    # Warrior is not in CATEGORIES so no candidate is suppressed
+    stats = {"claudeMessages": 100, "ideMinutes": 200}
+    valid = {"Mage", "Scholar"}
+    for _ in range(30):
+        result = compute_secondary_class(stats, "Warrior")
+        assert result in valid
+
+
 # ---------------------------------------------------------------------------
 # build_character_sheet
 # ---------------------------------------------------------------------------
@@ -223,3 +233,10 @@ def test_build_character_sheet_legendary():
     sheet = build_character_sheet(stats)
     assert sheet["tier"] == "Legendary"
     assert sheet["activityScore"] == 130.0
+
+
+def test_build_character_sheet_secondary_class_none_when_single_category():
+    """secondaryClass is None when only one category is active (no eligible secondary)."""
+    stats = {"claudeMessages": 50}  # only Mage category has score
+    sheet = build_character_sheet(stats)
+    assert sheet["secondaryClass"] is None

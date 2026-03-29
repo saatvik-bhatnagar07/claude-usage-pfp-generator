@@ -77,6 +77,8 @@ def compute_secondary_class(stats: dict, primary_class: str) -> str | None:
     for _cat, (keys, class_name) in CATEGORIES.items():
         if class_name == primary_class:
             continue
+        # Note: when primary_class is "Warrior", it is not in CATEGORIES so no
+        # candidate is ever suppressed here — all non-zero categories are eligible.
         score = sum(stats.get(k, 0) * WEIGHTS[k] for k in keys)
         if score > 0:
             candidates.append(class_name)
@@ -92,6 +94,8 @@ def compute_secondary_class(stats: dict, primary_class: str) -> str | None:
         cumulative += w
         if r <= cumulative:
             return cls
+    # Safety fallback: unreachable in practice because random.random() is in
+    # [0.0, 1.0) so r < total, meaning the loop above always returns before here.
     return candidates[-1]
 
 
