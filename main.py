@@ -90,7 +90,7 @@ def main():
     # 2. Build character sheet
     print("\nBuilding character sheet...")
     sheet = build_character_sheet(stats)
-    print(f"  Class: {sheet['className']}")
+    print(f"  Class: {sheet['className']} (secondary: {sheet.get('secondaryClass') or 'None'})")
     print(f"  Tier: {sheet['tier']}")
     print(f"  Score: {sheet['activityScore']}")
 
