@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from prompt_generator import generate_prompt
+from prompt_generator import _stat_seed, generate_prompt
 
 
 def _sheet(class_name, tier, stats, secondary=None):
@@ -53,16 +53,29 @@ def test_generate_prompt_no_secondary_phrase_when_none():
     assert "hints of" not in result
 
 
+def test_stat_seed_is_deterministic():
+    """Same stats always produce the same seed."""
+    stats = {"ideMinutes": 400, "claudeMessages": 100}
+    assert _stat_seed(stats) == _stat_seed(stats)
+
+
+def test_stat_seed_differs_for_different_stats():
+    """Different stat values produce different seeds."""
+    stats_a = {"ideMinutes": 400}
+    stats_b = {"ideMinutes": 999}
+    assert _stat_seed(stats_a) != _stat_seed(stats_b)
+
+
 def test_generate_prompt_primary_is_deterministic():
     """Same stats always produce the same primary aesthetic and intensity.
 
-    The scene modifier (module-level random.choice) is patched to a fixed value
-    so only the stat-seeded parts contribute to variation — confirming they don't.
+    Only the module-level random.choice (scene + secondary) is patched to a
+    fixed value. The stat-seeded Random instance is unaffected, so this test
+    genuinely verifies that the seeded path is deterministic.
     """
     stats = {"ideMinutes": 400}
     sheet = _sheet("Scholar", "Legendary", stats, secondary=None)
-    with patch("prompt_generator.random") as mock_rng:
-        mock_rng.choice.return_value = "at dusk with long shadows"
+    with patch("prompt_generator.random.choice", return_value="at dusk with long shadows"):
         p1 = generate_prompt(sheet)
         p2 = generate_prompt(sheet)
     assert p1 == p2

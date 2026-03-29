@@ -97,6 +97,8 @@ SCENE_MODIFIERS = [
 def _stat_seed(stats: dict) -> int:
     """Derive a deterministic integer seed from today's stat values."""
     from character_sheet import WEIGHTS
+    # Stats are expected to be integers; int() ensures consistent seeding
+    # if a collector ever returns a float (e.g. 400.7 → 400).
     key = "|".join(
         f"{k}={int(stats.get(k, 0))}"
         for k in sorted(WEIGHTS.keys())
