@@ -1,6 +1,8 @@
 """Generates image prompts from RPG character sheets using template-based aesthetics."""
 
+import hashlib
 import random
+from random import Random
 
 CLASS_AESTHETICS = {
     "Mage": [
@@ -78,15 +80,58 @@ TIER_INTENSITY = {
     ],
 }
 
+SCENE_MODIFIERS = [
+    "at dusk with long shadows",
+    "under a full moon",
+    "in the golden hour light",
+    "during a thunderstorm",
+    "bathed in dawn light",
+    "in a misty atmosphere",
+    "under starlit skies",
+    "in foggy conditions",
+    "at high noon with harsh light",
+    "under aurora borealis",
+]
+
+
+def _stat_seed(stats: dict) -> int:
+    """Derive a deterministic integer seed from today's stat values."""
+    from character_sheet import WEIGHTS
+    key = "|".join(
+        f"{k}={int(stats.get(k, 0))}"
+        for k in sorted(WEIGHTS.keys())
+    )
+    return int(hashlib.md5(key.encode()).hexdigest(), 16) % (2 ** 32)
+
 
 def generate_prompt(sheet: dict) -> str:
-    """Generate a template-based image prompt from a character sheet."""
+    """Generate a template-based image prompt from a character sheet.
+
+    Primary aesthetic and tier intensity are stat-seeded (deterministic per
+    day's stats). Secondary class element and scene modifier are drawn fresh
+    from module-level random on every call, ensuring novelty across runs.
+    """
     class_name = sheet["className"]
     tier = sheet["tier"]
-    aesthetic = random.choice(CLASS_AESTHETICS.get(class_name, CLASS_AESTHETICS["Warrior"]))
-    intensity = random.choice(TIER_INTENSITY.get(tier, TIER_INTENSITY["Adventurer"]))
+    secondary = sheet.get("secondaryClass")
+    stats = sheet["stats"]
 
+    # Deterministic picks — same stats always produce the same base prompt
+    rng = Random(_stat_seed(stats))
+    aesthetic = rng.choice(CLASS_AESTHETICS.get(class_name, CLASS_AESTHETICS["Warrior"]))
+    intensity = rng.choice(TIER_INTENSITY.get(tier, TIER_INTENSITY["Adventurer"]))
+
+    # Novel picks — fresh each run
+    scene = random.choice(SCENE_MODIFIERS)
+
+    if secondary:
+        sec_element = random.choice(CLASS_AESTHETICS.get(secondary, CLASS_AESTHETICS["Warrior"]))
+        return (
+            f"retro 16-bit pixel art, {intensity} RPG {class_name} character, "
+            f"{aesthetic}, with hints of {secondary}: {sec_element}, "
+            f"{scene}, dark background, large visible pixels, retro gaming aesthetic"
+        )
     return (
         f"retro 16-bit pixel art, {intensity} RPG {class_name} character, "
-        f"{aesthetic}, dark background, large visible pixels, retro gaming aesthetic"
+        f"{aesthetic}, {scene}, dark background, large visible pixels, retro gaming aesthetic"
     )
